@@ -75,12 +75,14 @@ class BloggerPublisher:
             }
             
             if article.get('description'):
-                meta_description = f"""
+                post_body['customMetaData'] = article['description']
+                
+                meta_tags = f"""<!--more-->
                 <meta name="description" content="{article['description']}" />
                 <meta property="og:description" content="{article['description']}" />
                 <meta name="twitter:description" content="{article['description']}" />
                 """
-                post_body['content'] = meta_description + post_body['content']
+                post_body['content'] = meta_tags + post_body['content']
             
             posts = self.service.posts()
             request = posts.insert(blogId=self.blog_id, body=post_body)
@@ -96,7 +98,7 @@ class BloggerPublisher:
             return False
     
     def _prepare_post_content(self, article: Dict) -> str:
-        """تحضير محتوى المنشور مع الصورة"""
+        """تحضير محتوى المنشور مع الصورة ورابط إكمال القراءة"""
         content_parts = []
         
         if article.get('image_html'):
@@ -106,9 +108,21 @@ class BloggerPublisher:
         
         if article.get('source_url'):
             content_parts.append(f"""
+            <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px;">
+                    <strong>📖 لإكمال قراءة المقال كاملاً:</strong><br>
+                    <a href="{article['source_url']}" target="_blank" style="color: #007bff; text-decoration: none;">
+                        👈 اضغط هنا للانتقال إلى المصدر الأصلي
+                    </a>
+                </p>
+            </div>
+            """)
+            
+            content_parts.append(f"""
             <hr>
             <p style="font-size: 12px; color: #666;">
-                <i>المصدر: <a href="{article['source_url']}" target="_blank">رابط المصدر</a></i>
+                <i>المصدر الأصلي: <a href="{article['source_url']}" target="_blank">رابط المصدر</a></i><br>
+                <i>حقوق المحتوى محفوظة للمصدر الأصلي</i>
             </p>
             """)
         

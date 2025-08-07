@@ -16,12 +16,8 @@ logger = logging.getLogger(__name__)
 class TrendAnalyzer:
     def __init__(self):
         self.pytrends = TrendReq(hl='ar', tz=360)
-        self.rss_feeds = [
-            'https://feeds.bbci.co.uk/arabic/rss.xml',
-            'https://www.aljazeera.net/xml/rss/all.xml',
-            'https://arabic.rt.com/rss',
-            'https://www.alarabiya.net/ar/rss.xml'
-        ]
+        import config
+        self.rss_feeds = config.RSS_FEEDS
         
     def get_trending_topics(self) -> List[Dict]:
         """الحصول على المواضيع الأكثر تداولاً"""

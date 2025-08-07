@@ -8,10 +8,15 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 
 RSS_FEEDS = os.getenv('RSS_FEEDS', 
-    'https://feeds.bbci.co.uk/arabic/rss.xml,'
-    'https://www.aljazeera.net/xml/rss/all.xml,'
+    'https://www.bbc.com/arabic/index.xml,'
+    'https://arabic.sputniknews.com/export/rss2/archive/index.xml,'
+    'https://m.youm7.com/rss/SectionRss?SectionID=88,'
+    'https://www.al-mala3b.net/rss.php?type=news&id=37,'
+    'https://www.al-mala3b.net/rss.php?type=news&id=38,'
+    'https://www.al-mala3b.net/rss.php?type=news&id=1,'
     'https://arabic.rt.com/rss,'
-    'https://www.alarabiya.net/ar/rss.xml'
+    'https://www.alarabiya.net/feed/rss2/ar.xml,'
+    'https://www.alarabiya.net/feed/rss2/ar/technology.xml'
 ).split(',')
 
 MIN_ARTICLE_LENGTH = int(os.getenv('MIN_ARTICLE_LENGTH', '500'))
