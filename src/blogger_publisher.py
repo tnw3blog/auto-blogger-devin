@@ -75,7 +75,12 @@ class BloggerPublisher:
             }
             
             if article.get('description'):
-                post_body['content'] = f"<!-- Meta Description: {article['description']} -->\n" + post_body['content']
+                meta_description = f"""
+                <meta name="description" content="{article['description']}" />
+                <meta property="og:description" content="{article['description']}" />
+                <meta name="twitter:description" content="{article['description']}" />
+                """
+                post_body['content'] = meta_description + post_body['content']
             
             posts = self.service.posts()
             request = posts.insert(blogId=self.blog_id, body=post_body)

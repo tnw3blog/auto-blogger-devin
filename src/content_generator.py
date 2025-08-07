@@ -5,6 +5,7 @@ Content Generator - ينشئ محتوى المقالات مع التنسيق ا�
 import logging
 import requests
 import re
+import os
 from typing import Dict, List, Optional
 from datetime import datetime
 import random
@@ -152,19 +153,61 @@ class ContentGenerator:
     
     def _get_article_image(self, topic: Dict) -> str:
         """الحصول على صورة مناسبة للمقال"""
+        try:
+            unsplash_key = os.getenv('UNSPLASH_ACCESS_KEY')
+            if unsplash_key:
+                image_url = self._get_unsplash_image(topic['title'], unsplash_key)
+                if image_url:
+                    return f"""
+                    <div style="text-align: center; margin: 20px 0;">
+                        <img src="{image_url}" 
+                             alt="{topic['title']}" 
+                             style="max-width: 100%; height: auto; border-radius: 8px;" />
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                            <i>صورة توضيحية للموضوع</i>
+                        </p>
+                    </div>
+                    """
+            
+            keywords = topic['title'].replace(' ', '+')[:50]
+            image_url = f"https://source.unsplash.com/800x400/?{keywords},news,arabic"
+            
+            return f"""
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="{image_url}" 
+                     alt="{topic['title']}" 
+                     style="max-width: 100%; height: auto; border-radius: 8px;" />
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    <i>صورة توضيحية للموضوع</i>
+                </p>
+            </div>
+            """
+            
+        except Exception as e:
+            logger.warning(f"⚠️ لم يتم العثور على صورة مناسبة: {str(e)}")
+            return ""
+    
+    def _get_unsplash_image(self, query: str, access_key: str) -> Optional[str]:
+        """الحصول على صورة من Unsplash API"""
+        try:
+            url = "https://api.unsplash.com/search/photos"
+            headers = {"Authorization": f"Client-ID {access_key}"}
+            params = {
+                "query": query[:50],
+                "per_page": 1,
+                "orientation": "landscape"
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data['results']:
+                    return data['results'][0]['urls']['regular']
+            
+        except Exception as e:
+            logger.warning(f"⚠️ خطأ في Unsplash API: {str(e)}")
         
-        image_html = f"""
-        <div style="text-align: center; margin: 20px 0;">
-            <img src="https://via.placeholder.com/600x300/0066cc/ffffff?text={topic['title'][:20]}" 
-                 alt="{topic['title']}" 
-                 style="max-width: 100%; height: auto; border-radius: 8px;" />
-            <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                <i>صورة توضيحية للموضوع</i>
-            </p>
-        </div>
-        """
-        
-        return image_html
+        return None
     
     def _generate_categories(self, topic: Dict) -> str:
         """إنشاء تصنيفات مناسبة للمقال"""

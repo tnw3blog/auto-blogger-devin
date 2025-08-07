@@ -29,7 +29,24 @@ python main.py
 ```
 
 ## الجدولة اليومية
+
+### التشغيل المجدول (موصى به)
 ```bash
-# إضافة إلى crontab للتشغيل اليومي
-0 9 * * * /usr/bin/python3 /path/to/auto-blogger-devin/main.py
+# تشغيل المجدول اليومي في 9 مساء بتوقيت السعودية
+python cli.py schedule
+
+# تشغيل فوري ثم مجدول
+python cli.py schedule --run-now
+```
+
+### استخدام Crontab (بديل)
+```bash
+# إضافة إلى crontab للتشغيل اليومي في 9 مساء بتوقيت السعودية
+0 18 * * * cd /path/to/auto-blogger-devin && /usr/bin/python3 main.py
+```
+
+### التحكم في التوقيت
+عدّل `SCHEDULE_TIME` في ملف `.env`:
+```env
+SCHEDULE_TIME=18:00  # 9 مساء بتوقيت السعودية
 ```
