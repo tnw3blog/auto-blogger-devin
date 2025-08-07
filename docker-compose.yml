@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  auto-blogger:
+    build: .
+    container_name: auto-blogger-devin
+    environment:
+      - BLOGGER_BLOG_ID=${BLOGGER_BLOG_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+      - ./token.json:/app/token.json
+    restart: unless-stopped
+    
+  scheduler:
+    build: .
+    container_name: auto-blogger-scheduler
+    command: python cli.py schedule
+    environment:
+      - BLOGGER_BLOG_ID=${BLOGGER_BLOG_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+      - ./token.json:/app/token.json
+    restart: unless-stopped
+    depends_on:
+      - auto-blogger
