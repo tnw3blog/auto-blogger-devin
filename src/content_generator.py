@@ -54,38 +54,25 @@ class ContentGenerator:
             return None
     
     def _generate_title(self, topic: Dict) -> str:
-        """إنشاء عنوان مناسب للمقال"""
-        original_title = topic['title']
-        
-        templates = [
-            f"كل ما تحتاج معرفته عن {original_title}",
-            f"{original_title}: التطورات الأخيرة والتحليل",
-            f"تحليل شامل: {original_title}",
-            f"{original_title} - الأخبار والتحديثات",
-            f"آخر المستجدات حول {original_title}",
-        ]
-        
-        return random.choice(templates)
+        """استخدام العنوان الأصلي مباشرة"""
+        return topic['title']
     
     def _generate_content(self, topic: Dict) -> str:
-        """إنشاء محتوى المقال مع تنسيق HTML"""
+        """استخدام المحتوى الأصلي (50% فقط) بدون إعادة صياغة"""
         
-        original_content = topic.get('content', topic['title'])
-        cleaned_content = self._clean_and_expand_content(original_content)
+        full_content = self._extract_full_article_content(topic.get('url', ''))
         
-        html_content = f"""
-        <p><b>مقدمة:</b></p>
-        <p>{self._generate_introduction(topic)}</p>
+        if not full_content:
+            full_content = topic.get('content', topic['title'])
         
-        <p><b>التفاصيل الرئيسية:</b></p>
-        {self._format_main_content(cleaned_content)}
+        half_content = self._clean_and_expand_content(full_content)
         
-        <p><b>النقاط المهمة:</b></p>
-        {self._generate_key_points(topic)}
+        html_content = f"<p>{half_content}</p>"
         
-        <p><b>الخلاصة:</b></p>
-        <p>{self._generate_conclusion(topic)}</p>
-        """
+        if topic.get('url'):
+            html_content += f"""
+            <p><a href="{topic['url']}" target="_blank">اقرأ المزيد من المصدر الأصلي</a></p>
+            """
         
         return html_content.strip()
     
@@ -94,9 +81,9 @@ class ContentGenerator:
         soup = BeautifulSoup(content, 'html.parser')
         clean_text = soup.get_text()
         
-        sentences = clean_text.split('.')
-        
-        half_content_sentences = sentences[:max(3, len(sentences)//2)]
+        sentences = [s.strip() for s in clean_text.split('.') if s.strip()]
+        half_count = max(3, len(sentences) // 2)
+        half_content_sentences = sentences[:half_count]
         half_content = '. '.join(half_content_sentences).strip()
         
         if half_content and not half_content.endswith('.'):
@@ -314,14 +301,61 @@ class ContentGenerator:
         return ', '.join(relevant_categories[:5])
     
     def _generate_description(self, topic: Dict, content: str) -> str:
-        """إنشاء وصف للبحث (meta description)"""
-        soup = BeautifulSoup(content, 'html.parser')
-        text_content = soup.get_text()
+        """إنشاء وصف للبحث من المحتوى الأصلي"""
+        original_content = topic.get('content', topic['title'])
+        soup = BeautifulSoup(original_content, 'html.parser')
+        text_content = soup.get_text().strip()
         
-        first_sentence = text_content.split('.')[0]
-        if len(first_sentence) > 160:
-            description = first_sentence[:157] + "..."
+        first_sentence = text_content.split('.')[0].strip()
+        if len(first_sentence) > 180:
+            description = first_sentence[:177] + "..."
         else:
             description = first_sentence + "."
         
         return description.strip()
+    
+    def _extract_full_article_content(self, article_url: str) -> str:
+        """استخراج المحتوى الكامل من المقال الأصلي"""
+        try:
+            if not article_url:
+                return ""
+                
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(article_url, headers=headers, timeout=15)
+            if response.status_code != 200:
+                return ""
+                
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            for element in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'advertisement']):
+                element.decompose()
+            
+            content_selectors = [
+                'article .content',
+                'article .article-content', 
+                '.post-content',
+                '.entry-content',
+                'article p',
+                '.content p',
+                'main p'
+            ]
+            
+            content_text = ""
+            for selector in content_selectors:
+                elements = soup.select(selector)
+                if elements:
+                    content_text = ' '.join([elem.get_text().strip() for elem in elements])
+                    break
+            
+            if not content_text:
+                paragraphs = soup.find_all('p')
+                content_text = ' '.join([p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 50])
+            
+            return content_text.strip()
+            
+        except Exception as e:
+            logger.warning(f"⚠️ خطأ في استخراج المحتوى من {article_url}: {str(e)}")
+            return ""

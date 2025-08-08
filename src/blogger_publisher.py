@@ -77,7 +77,7 @@ class BloggerPublisher:
             if article.get('description'):
                 post_body['customMetaData'] = article['description']
                 
-                meta_tags = f"""<!--more-->
+                meta_tags = f"""
                 <meta name="description" content="{article['description']}" />
                 <meta property="og:description" content="{article['description']}" />
                 <meta name="twitter:description" content="{article['description']}" />
